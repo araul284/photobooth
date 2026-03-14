@@ -1,8 +1,22 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+
+import LandingPage from "./pages/LandingPage"
+import BoothRoom from "./pages/BoothRoom"
+import ResultPage from "./pages/ResultPage"
+
 function App() {
   return (
-    <div className="text-4xl text-pink-500">
-      Tailwind is working 🎉
-    </div>
+    <BrowserRouter>
+      <Routes>
+
+        <Route path="/" element={<LandingPage />} />
+
+        <Route path="/booth/:roomId" element={<BoothRoom />} />
+
+        <Route path="/result" element={<ResultPage />} />
+
+      </Routes>
+    </BrowserRouter>
   )
 }
 
