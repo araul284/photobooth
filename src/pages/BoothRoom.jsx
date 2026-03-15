@@ -1,14 +1,38 @@
 import { useParams } from "react-router-dom"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import CameraView from "../components/CameraView"
 import { captureFrame } from "../utils/captureFrame"
 import { generatePhotostrip } from "../utils/generatePhotostrip"
 import DoodleFrame from "../components/DoodleFrame"
 import PolaroidPhoto from "../components/PolaroidPhoto"
+import socket from "../hooks/useSocket"
 
 function BoothRoom() {
 
   const { roomId } = useParams()
+
+  useEffect(() => {
+
+    socket.emit("join-room", roomId)
+
+  }, [roomId])
+
+  const inviteLink = `${window.location.origin}/booth/${roomId}`
+
+  useEffect(() => {
+    socket.on("session-started", () => {
+      startPhotoSession()
+    })
+
+  //   socket.emit("photo-captured", {
+  //     roomId, photo: image
+  //   })
+
+  //   socket.on("partner-photo", (photo) => {
+  //     setPartnerPhotos(prev => [...prev, photo])
+  //   })
+
+  }, [])
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -24,6 +48,16 @@ function BoothRoom() {
   const [isCapturing, setIsCapturing] = useState(false)
 
   const [photostrip, setPhotostrip] = useState(null)
+
+  const [partnerPhotos, setPartnerPhotos] = useState([])
+  const [partnerJoined, setPartnerJoined] = useState(false)
+
+  useEffect(() => {
+
+    socket.on("partner-joined", () => {
+      setPartnerJoined(true)
+    })
+  }, [])
 
   const takePhoto = () => {
     const image = captureFrame(videoRef.current)
@@ -97,19 +131,27 @@ function BoothRoom() {
         Photobooth Room
       </h2>
 
-      <p className="mb-4">
-        Share this link with your partner:
-      </p>
+      <div className="mt-6 text-center">
+        <p className="text-sm">
+          Share this link with your partner:
+        </p>
 
-      <div className="bg-white p-4 rounded-lg shadow">
-        {window.location.href}
+        <input
+          value={inviteLink}
+          readOnly
+          className="bg-white p-4 rounded-lg shadow"
+        />
+
       </div>
 
       <button
-        onClick={copyLink}
+        onClick={() => {
+          navigator.clipboard.writeText(inviteLink)
+          alert("Link Copied!")
+        }}
         className="mt-3 bg-pink-400 text-white px-4 py-2 rounded-lg"
-        >
-          Copy Invite Link
+      >
+        Copy Invite Link
       </button>
 
       {countdown && (
@@ -144,6 +186,13 @@ function BoothRoom() {
         Start Photo Session
       </button>
 
+      <p className="mt-4 text-gray-600">
+        
+        {partnerJoined
+        ? "Your partner joined the booth <3"
+        : "Waiting for your partner..."}
+      </p>
+
     {photo && (
       <div className="mt-6">
 
@@ -167,7 +216,7 @@ function BoothRoom() {
               key={index}
               src={photo}
             />
-            
+
           ))}
 
        </div>
@@ -190,10 +239,6 @@ function BoothRoom() {
         </div>
 
       )}
-
-      <p className="mt-6 text-gray-500">
-        Waiting for your partner to join...
-      </p>
 
     </div>
   )
