@@ -4,6 +4,7 @@ import CameraView from "../components/CameraView"
 import { captureFrame } from "../utils/captureFrame"
 import { generatePhotostrip } from "../utils/generatePhotostrip"
 import DoodleFrame from "../components/DoodleFrame"
+import PolaroidPhoto from "../components/PolaroidPhoto"
 
 function BoothRoom() {
 
@@ -156,23 +157,22 @@ function BoothRoom() {
      </div>
     )}
 
-      {photos.length > 0 && (
+    {photos.length > 0 && (
 
-        <div className="mt-8 grid grid-cols-2 gap-4 scale-[x]-1">
+      <div className="mt-10 flex flex-wrap gap-6 justify-center">
 
-            {photos.map((photo, index) => (
+          {photos.map((photo, index) => (
 
-              <img 
-                key={index}
-                src={photo}
-                className="rounded-lg border"
-              />
+            <PolaroidPhoto 
+              key={index}
+              src={photo}
+            />
+            
+          ))}
 
-            ))}
+       </div>
 
-        </div>
-
-      )}
+    )}
 
       {photostrip && (
 

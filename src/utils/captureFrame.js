@@ -1,14 +1,18 @@
+import { applyVintageFilter } from "./applyVintageFilter"
+
 export function captureFrame(videoElement) {
+
     const canvas = document.createElement("canvas")
 
     canvas.width = videoElement.videoWidth
     canvas.height = videoElement.videoHeight
 
-    const context = canvas.getContext("2d")
+    const ctx = canvas.getContext("2d")
 
-    context.drawImage(videoElement, 0, 0)
+    ctx.drawImage(videoElement, 0, 0)
 
-    const imageData = canvas.toDataURL("image/png")
+    applyVintageFilter(canvas, ctx)
 
-    return imageData
+    return canvas.toDataURL("image/png")
+    
 }
