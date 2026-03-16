@@ -1,9 +1,8 @@
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useRef, useState } from "react"
 
 import CameraView from "../components/CameraView"
 import { captureFrame } from "../utils/captureFrame"
-import { generateSharedStrip } from "../utils/generateSharedStrip"
 
 import DoodleFrame from "../components/DoodleFrame"
 import PolaroidPhoto from "../components/PolaroidPhoto"
@@ -18,18 +17,18 @@ function BoothRoom() {
 
   const videoRef = useRef(null)
 
-  const [photo, setPhoto] = useState(null)
   const [photos, setPhotos] = useState([])
   const [partnerPhotos, setPartnerPhotos] = useState([])
 
   const [countdown, setCountdown] = useState(null)
   const [isCapturing, setIsCapturing] = useState(false)
 
-  const [photostrip, setPhotostrip] = useState(null)
-
   const [partnerJoined, setPartnerJoined] = useState(false)
 
   const inviteLink = `${window.location.origin}/booth/${roomId}`
+
+  const navigate = useNavigate()
+  const hasNavigatedRef = useRef(false)
 
   /* ---------------------------
      JOIN ROOM
@@ -121,8 +120,6 @@ function BoothRoom() {
 
       const image = captureFrame(videoRef.current)
 
-      setPhoto(image)
-
       captured.push(image)
 
       setPhotos([...captured])
@@ -143,85 +140,17 @@ function BoothRoom() {
 
   }
 
-  /* ---------------------------
-     GENERATE FINAL STRIP
-  --------------------------- */
-
   useEffect(() => {
-
-    const generateStrip = async () => {
-
-      if (photos.length === 4 && partnerPhotos.length === 4) {
-
-        const strip = await generateSharedStrip(
-          photos,
-          partnerPhotos
-        )
-
-        setPhotostrip(strip)
-
-      }
-
+    if (photos.length === 4 && partnerPhotos.length === 4 && !hasNavigatedRef.current) {
+      hasNavigatedRef.current = true
+      navigate("/result", {
+        state: { photos, partnerPhotos, roomId }
+      })
     }
-
-    generateStrip()
-
-  }, [photos, partnerPhotos])
-
-  //download photostrip when ready
-  const downloadStrip = () => {
-
-  const link = document.createElement("a")
-
-  link.href = photostrip
-
-  link.download = "parallel-polaroid.png"
-
-  link.click()
-
-}
-
-  // share photostrip
-  const shareStrip = async () => {
-
-    if (!navigator.share) {
-      alert("Sharing not supported on this device")
-      return
-    }
-
-    const response = await fetch(photostrip)
-    const blob = await response.blob()
-
-    const file = new File(
-      [blob],
-      "photostrip.png",
-      { type: "image/png" }
-    )
-
-    await navigator.share({
-      title: "Our Photobooth Memory",
-      text: "We took this together 💕",
-      files: [file]
-    })
-
-  }
-
-  const retakePhotos = () => {
-
-    setPhotos([])
-    setPartnerPhotos([])
-    setPhotostrip(null)
-
-  }
-
-  //wrap the entire booth UI in the curtain component
-  <BoothCurtain>
-
-    {/* Your entire booth UI here */}
-
-  </BoothCurtain>
+  }, [photos, partnerPhotos, navigate, roomId])
 
   return (
+    <BoothCurtain>
 
     <div className="h-screen bg-[#fff7f2] flex flex-col items-center justify-center">
 
@@ -325,47 +254,9 @@ function BoothRoom() {
 
       )}
 
-      {/* Final photostrip */}
-
-      {photostrip && (
-
-        <div className="mt-10 flex flex-col items-center">
-
-          <h2 className="text-xl mb-4">
-            Your Photostrip
-          </h2>
-
-          <img
-            src={photostrip}
-            className="rounded-lg shadow-lg"
-          />
-
-        </div>
-
-      )}
-
-      <button
-        onClick={downloadStrip}
-        className="mt-4 bg-pink-400 text-white px-5 py-2 rounded-lg"
-        >
-        Download Photostrip
-      </button>
-
-      <button
-        onClick={shareStrip}
-        className="mt-3 bg-purple-400 text-white px-5 py-2 rounded-lg"
-        >
-        Share Photostrip
-      </button>
-
-      <button
-        onClick={retakePhotos}
-        className="mt-3 bg-gray-400 text-white px-5 py-2 rounded-lg"
-        >
-        Take Another
-      </button>
-
     </div>
+
+    </BoothCurtain>
 
   )
 

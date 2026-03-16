@@ -1,4 +1,4 @@
-import { useEffect, useRef,} from "react"
+import { useEffect } from "react"
 
 function CameraView({ videoRef }) {
 
@@ -16,7 +16,7 @@ function CameraView({ videoRef }) {
 
         startCamera()
 
-    }, [])
+    }, [videoRef])
 
     return (
         <video
