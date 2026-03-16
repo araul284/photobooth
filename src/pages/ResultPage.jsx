@@ -12,16 +12,25 @@ function ResultPage() {
 
   const [photostrip, setPhotostrip] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [flash, setFlash] = useState(false)
+  const [printing, setPrinting] = useState(false)
 
   useEffect(() => {
     if (!photos || !partnerPhotos) return
     if (photos.length !== 4 || partnerPhotos.length !== 4) return
+
+    setFlash(true)
+
+    setTimeout(() => {
+      setFlash(false)
+    }, 200)
 
     const run = async () => {
       setIsGenerating(true)
       const strip = await generateSharedStrip(photos, partnerPhotos)
       setPhotostrip(strip)
       setIsGenerating(false)
+      setPrinting(true)
     }
 
     const timer = setTimeout(run, 0)
@@ -122,6 +131,28 @@ function ResultPage() {
           </div>
         )
       ))}
+
+      {printing && (
+        <div className="printer-container">
+
+          <div className="printer-slot"></div>
+
+          <div className="strip-wrapper">
+
+            <img
+              src={photostrip}
+              className="photo-strip"
+            />
+
+          </div>
+
+        </div>
+      )}
+
+      {flash && (
+        <div className="flash-overlay"></div>
+      )}
+
     </div>
   )
 }

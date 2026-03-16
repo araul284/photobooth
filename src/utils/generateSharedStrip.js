@@ -1,4 +1,4 @@
-export async function generateSharedStrip(myPhotos, patnerPhotos) {
+export async function generateSharedStrip(myPhotos, partnerPhotos) {
 
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")

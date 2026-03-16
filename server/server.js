@@ -8,19 +8,23 @@ const io = new Server(3001, {
 
 io.on("connection", (socket) => {
 
-  console.log("User connected")
-
   socket.on("join-room", (roomId) => {
 
     socket.join(roomId)
 
-    console.log("Joined room:", roomId)
+    socket.to(roomId).emit("partner-joined")
 
   })
 
-  socket.on("send-photo", ({ roomId, photo }) => {
+  socket.on("camera-frame", ({ roomId, frame }) => {
 
-    socket.to(roomId).emit("receive-photo", photo)
+    socket.to(roomId).emit("partner-frame", frame)
+
+  })
+
+  socket.on("photo-captured", ({ roomId, photo }) => {
+
+    socket.to(roomId).emit("partner-photo", photo)
 
   })
 

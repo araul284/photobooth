@@ -27,6 +27,8 @@ function BoothRoom() {
 
   const inviteLink = `${window.location.origin}/booth/${roomId}`
 
+  const [partnerFrame, setPartnerFrame] = useState(null)
+
   const navigate = useNavigate()
   const hasNavigatedRef = useRef(false)
 
@@ -48,9 +50,14 @@ function BoothRoom() {
 
     })
 
+    socket.on("partner-frame", (frame) => {
+      setPartnerFrame(frame)
+    })
+
     return () => {
       socket.off("partner-joined")
       socket.off("partner-photo")
+      socket.off("partner-frame")
     }
 
   }, [roomId])
@@ -162,21 +169,15 @@ function BoothRoom() {
 
       <div className="mt-6 text-center">
 
-        <p className="text-sm">
-          Share this link with your partner:
+        <p className="text-xl font-bold">
+        Room Code: {roomId}
         </p>
 
-        <input
-          value={inviteLink}
-          readOnly
-          className="bg-white p-3 rounded-lg shadow"
-        />
-
         <button
-          onClick={copyLink}
-          className="mt-3 bg-pink-400 text-white px-4 py-2 rounded-lg"
+          onClick={() => navigator.clipboard.writeText(roomId)}
+          className="bg-pink-400 text-white px-4 py-2 rounded"
         >
-          Copy Invite Link
+        Copy Code
         </button>
 
       </div>
@@ -185,8 +186,7 @@ function BoothRoom() {
 
       {countdown && (
 
-        <div className="absolute text-6xl font-bold text-white">
-
+        <div className="absolute text-7xl font-bold text-pink-500 animate-pulse">
           {countdown}
 
         </div>
@@ -205,14 +205,14 @@ function BoothRoom() {
 
         <div className="relative w-64 h-64 bg-gray-200 rounded-[30px] border-4 border-dashed border-pink-300 flex items-center justify-center">
 
-          {partnerPhotos.length === 0
-            ? "Partner Camera"
-            : (
-              <img
-                src={partnerPhotos[partnerPhotos.length - 1]}
-                className="w-full h-full object-cover rounded-[20px]"
-              />
-            )}
+          {partnerFrame ? (
+            <img
+              src={partnerFrame}
+              className="w-full h-full object-cover scale-x-[-1]"
+            />
+          ) : (
+            "Partner Camera"
+          )}
 
         </div>
 
@@ -234,25 +234,6 @@ function BoothRoom() {
           : "Waiting for your partner..."}
 
       </p>
-
-      {/* Preview photos */}
-
-      {photos.length > 0 && (
-
-        <div className="mt-10 flex flex-wrap gap-6 justify-center">
-
-          {photos.map((p, index) => (
-
-            <PolaroidPhoto
-              key={index}
-              src={p}
-            />
-
-          ))}
-
-        </div>
-
-      )}
 
     </div>
 

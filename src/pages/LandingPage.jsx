@@ -11,6 +11,13 @@ function LandingPage() {
     navigate(`/booth/${roomId}`)
   }
 
+  // const [roomInput, setRoomInput] = useState("")
+
+  // const joinRoom = () => {
+  //   if (!roomInput) return
+  //   navigate(`/booth/${roomInput}`)
+  // }
+
   return (
     <BoothCurtain>
       <div className="h-screen bg-[#F8F3E8] flex flex-col items-center justify-center text-center">
@@ -23,11 +30,12 @@ function LandingPage() {
           Take photobooth pictures together even when you're miles apart.
         </p>
 
-        <button
-          onClick={createRoom}
-          className="bg-pink-400 hover:bg-pink-500 text-white px-8 py-3 rounded-xl shadow-md"
-        >
-          Start Photobooth
+        <button onClick={createRoom}>
+        Create Room
+        </button>
+
+        <button onClick={()=>navigate("/join")}>
+        Join Room
         </button>
 
       </div>
