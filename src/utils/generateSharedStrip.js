@@ -20,7 +20,7 @@ export async function generateSharedStrip(myPhotos, partnerPhotos) {
         img1.src = myPhotos[i]
 
         const img2 = new Image()
-        img2.src = patnerPhotos[i]
+        img2.src = partnerPhotos[i]
 
         await Promise.all([
             new Promise(res => img1.onload = res),

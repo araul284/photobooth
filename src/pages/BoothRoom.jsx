@@ -5,15 +5,15 @@ import CameraView from "../components/CameraView"
 import { captureFrame } from "../utils/captureFrame"
 
 import DoodleFrame from "../components/DoodleFrame"
-import PolaroidPhoto from "../components/PolaroidPhoto"
 
-import socket from "../hooks/useSocket"
+import { useSocket } from "../hooks/useSocket"
 
 import BoothCurtain from "../components/BoothCurtain"
 
 function BoothRoom() {
 
   const { roomId } = useParams()
+  const { socket, isConnected, error } = useSocket()
 
   const videoRef = useRef(null)
 
@@ -37,30 +37,42 @@ function BoothRoom() {
   --------------------------- */
 
   useEffect(() => {
+    if (!socket || !isConnected) {
+      console.log("⏳ Waiting for socket connection...")
+      return
+    }
 
+    console.log("🔗 Socket connected, joining room:", roomId)
     socket.emit("join-room", roomId)
 
     socket.on("partner-joined", () => {
+      console.log("✅ Partner joined!")
       setPartnerJoined(true)
     })
 
     socket.on("partner-photo", (photo) => {
-
+      console.log("📸 Received partner photo")
       setPartnerPhotos((prev) => [...prev, photo])
-
     })
 
     socket.on("partner-frame", (frame) => {
+      console.log("🖼️ Received partner frame")
       setPartnerFrame(frame)
     })
 
+    socket.on("error", (err) => {
+      console.error("❌ Socket error in room:", err)
+    })
+
     return () => {
+      console.log("🧹 Cleaning up socket listeners")
       socket.off("partner-joined")
       socket.off("partner-photo")
       socket.off("partner-frame")
+      socket.off("error")
     }
 
-  }, [roomId])
+  }, [roomId, socket, isConnected])
 
   /* ---------------------------
      COPY LINK
@@ -115,7 +127,7 @@ function BoothRoom() {
 
   const startPhotoSession = async () => {
 
-    if (isCapturing) return
+    if (isCapturing || !isConnected) return
 
     setIsCapturing(true)
 
@@ -132,6 +144,7 @@ function BoothRoom() {
       setPhotos([...captured])
 
       // SEND PHOTO TO PARTNER
+      console.log(`📤 Sending photo ${i + 1}/4`)
       socket.emit("photo-captured", {
 
         roomId,
@@ -149,6 +162,7 @@ function BoothRoom() {
 
   useEffect(() => {
     if (photos.length === 4 && partnerPhotos.length === 4 && !hasNavigatedRef.current) {
+      console.log("✅ All photos collected, navigating to result")
       hasNavigatedRef.current = true
       navigate("/result", {
         state: { photos, partnerPhotos, roomId }
@@ -157,13 +171,24 @@ function BoothRoom() {
   }, [photos, partnerPhotos, navigate, roomId])
 
   return (
-    <BoothCurtain>
 
     <div className="h-screen bg-[#fff7f2] flex flex-col items-center justify-center">
 
       <h2 className="text-2xl mb-6">
         Photobooth Room
       </h2>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-200 text-red-800 rounded">
+          ⚠️ {error}
+        </div>
+      )}
+
+      {!isConnected && (
+        <div className="mb-4 p-3 bg-yellow-200 text-yellow-800 rounded">
+          ⏳ Connecting to server...
+        </div>
+      )}
 
       {/* Invite link */}
 
@@ -199,7 +224,7 @@ function BoothRoom() {
 
         <DoodleFrame>
 
-          <CameraView videoRef={videoRef} />
+          <CameraView videoRef={videoRef} roomId={roomId} />
 
         </DoodleFrame>
 
@@ -222,22 +247,25 @@ function BoothRoom() {
 
       <button
         onClick={startPhotoSession}
-        className="mt-8 bg-pink-400 hover:bg-pink-500 text-white px-6 py-3 rounded-xl"
+        disabled={!isConnected || isCapturing}
+        className={`mt-8 ${
+          isConnected && !isCapturing
+            ? "bg-pink-400 hover:bg-pink-500"
+            : "bg-gray-400 cursor-not-allowed"
+        } text-white px-6 py-3 rounded-xl transition`}
       >
-        Start Photo Session
+        {isCapturing ? "Capturing..." : "Start Photo Session"}
       </button>
 
       <p className="mt-4 text-gray-600">
 
         {partnerJoined
-          ? "Your partner joined the booth <3"
-          : "Waiting for your partner..."}
+          ? "✅ Your partner joined the booth <3"
+          : "⏳ Waiting for your partner..."}
 
       </p>
 
     </div>
-
-    </BoothCurtain>
 
   )
 
