@@ -10,7 +10,7 @@ export const useSocket = () => {
   useEffect(() => {
     // Initialize socket only once
     if (!socket) {
-      socket = io("http://localhost:3001", {
+      socket = io("https://photobooth-production-d79b.up.railway.app", {
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
